@@ -1,44 +1,34 @@
 /* eslint-disable no-useless-constructor */
-import React from 'react';
+import React,  { useState } from 'react';
 import io from 'socket.io-client';
 
-class Game extends React.Component {
-    // Конструктор компонента, вызывается при создании экземпляра класса
-    constructor(props) {
-        super(props);
-        // Инициализация состояния компонента, где вы будете хранить данные вашей игры
-        this.state = {
-            // Здесь могут быть переменные, отслеживающие состояние игры
-        };
+const Game = () => {
+        const [playerName, setPlayerName] = useState('')
 
-        this.socket = io('http://localhost:5000');
-    }
-
-
-    // Метод, вызывается сразу после монтирования компонента в DOM
-    componentDidMount() {
-        // Добавьте здесь логику, которая должна выполняться после рендеринга компонента
-        // Например, установка обработчиков событий WebSocket
-    }
-
-    // Метод, вызывается перед размонтированием компонента
-    componentWillUnmount() {
-        // Добавьте здесь логику, которая должна выполняться перед удалением компонента
-        // Например, закрытие соединения WebSocket
-    }
-
-    // Дополнительные методы для обработки логики игры и событий WebSocket могут быть добавлены здесь
-
-    // Метод для рендеринга компонента в DOM
-    render(){
-        return(
-            <div>
-                {/* Здесь вы можете добавить JSX-код для отображения интерфейса вашей игры */}
+    
+        return (
+            <div className='container mt-5'>
+                <div className='row justify-content-center'></div>
+                <div className='col-md-6'></div>
+                <div className='card'></div>
+                <div className='card-body'></div>
+                <h5 className='card-title'>Введите ваше имя</h5>
+                <form>
+                    <div className='form-group'>
+                        <label htmlFor='playerName'>Имя игрока</label>
+                        <input
+                            type='text'
+                            className='form-control'
+                            id='playerName'
+                            value={this.state.playerName}
+                            onChange={(e) => this.setState({ playerName: e.target.value })}
+                            />
+                    </div>
+                </form>
             </div>
         )
-    }
-    
-}
+};
+
 
 
 
