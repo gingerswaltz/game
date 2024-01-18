@@ -77,6 +77,11 @@ const Rating = sequelize.define('Rating', {
     },
 });
 
+
+// Определение отношения
+Player.hasOne(Rating, { foreignKey: 'playerId' }); // Каждый игрок имеет только одну запись рейтинг
+Rating.belongsTo(Player, { foreignKey: 'playerId' }); // Каждая запись рейтинга принадлежит одному игроку
+
 // Синхронизация с базой данных, создание таблиц, если их нет
 sequelize.sync();
 

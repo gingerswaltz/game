@@ -89,11 +89,15 @@ app.post('/api/players', async (req, res) => {
   }
 
   try {
-    // Подключаемся к базе данных и создаем нового игрока
-    const newPlayer = await Player.create({ username });
+    await sequelize.transaction(async (t) => {
+      // Подключаемся к базе данных и создаем нового игрока
+      const newPlayer = await Player.create({ username }, { transaction: t });
 
-    // Отправляем данные нового игрока в формате JSON клиенту
-    res.status(201).json(newPlayer);
+      await Rating.create({ playerId: newPlayer.id, rating: 0 }, { transaction: t });
+
+      // Отправляем данные нового игрока в формате JSON клиенту
+      res.status(201).json(newPlayer);
+    })
   } catch (error) {
     console.error('Error creating player:', error);
     res.status(500).send('Internal Server Error');
@@ -126,7 +130,7 @@ app.get('/api/players/:id/rating', async (req, res) => {
     });
 
     // Отправим JSON-ответ с рейтингом игрока
-    res.json({ rating: rating ? rating.rating : null });
+    res.json({ rating: rating ? rating.rating : NaN });
   } catch (error) {
     // Обработка ошибок
     console.error('Error retrieving player rating:', error);
@@ -189,3 +193,30 @@ app.get('/api/games', async (req, res) => {
   }
 });
 
+
+app.get('/api/rating/:nickname/by_nickname', async (req, res) => {
+  try {
+    // Извлекаем Nickname игрока из параметра маршрута
+    const playerNick = req.params.nickname;
+    // Проверка, что параметр Nickname присутствует
+    if (!playerNick || playerNick===null) {
+      return res.status(400).json({ error: 'Invalid Player Nickname' });
+    }
+
+    // Найдем рейтинг игрока по nickname в таблице Rating
+    const rating = await Rating.findOne({
+      include: [{
+        model: Player,
+        where: { username: playerNick },
+      }],
+    });
+
+    // Отправим JSON-ответ с рейтингом игрока
+    res.json({ rating: rating ? rating.rating : NaN });
+
+  } catch (error) {
+    console.error('Error retrieving rating by nick:', error);
+    res.status(500).send('Internal Server Error');
+  }
+
+});
