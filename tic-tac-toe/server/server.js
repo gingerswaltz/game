@@ -5,15 +5,23 @@ const WebSocket = require("ws");
 
 // Класс сервера "крестики-нолики"
 class TicTacToeServer {
+  // Конструктор класса TicTacToeServer
   constructor() {
-    this.app = express();
-    this.httpServer = http.createServer();
-    this.wss = new WebSocket.Server({ server: this.httpServer });
+    // Инициализация объектов сервера, WebSocket и соответствующих списков
+    this.app = express();                  // Экспресс-приложение
+    this.httpServer = http.createServer();  // HTTP-сервер
+    this.wss = new WebSocket.Server({ server: this.httpServer });  // Сервер WebSocket
 
+    // Список активных соединений клиентов WebSocket
     this.clientConnections = {};
+
+    // Словарь для отслеживания соответствия оппонентов по их clientId
     this.opponents = {};
+
+    // Список clientId ожидающих матча
     this.clientIdsWaitingMatch = [];
 
+    // Вызов методов настройки для Express и WebSocket
     this.setupExpress();
     this.setupWebSocket();
   }
@@ -28,11 +36,18 @@ class TicTacToeServer {
     this.wss.on("connection", this.handleConnection.bind(this));
   }
 
+  // Метод обработки нового подключения к серверу WebSocket
   handleConnection(connection) {
+    // Создание нового объекта игрока, передавая ему соединение и ссылку на текущий сервер
     const player = new Player(connection, this);
+
+    // Добавление игрока в список клиентов с использованием clientId в качестве ключа
     this.clientConnections[player.clientId] = player;
+
+    // Попытка сопоставить игроков для начала матча
     this.matchClients(player.clientId);
   }
+
 
   matchClients(clientId) {
     this.clientIdsWaitingMatch.push(clientId);
@@ -74,17 +89,18 @@ class TicTacToeServer {
   }
 
   closeClient(player) {
-    player.connection.close();
     if (player.isWaitingMatch) {
       this.clientIdsWaitingMatch = this.clientIdsWaitingMatch.filter(id => id !== player.clientId);
     } else {
       const opponentClientId = this.opponents[player.clientId];
-      this.clientConnections[opponentClientId].sendResultMessage("opponent left");
+      if (this.clientConnections[opponentClientId]) {
+        this.clientConnections[opponentClientId].sendExitMessage();
+      }
     }
-
+    player.connection.close();
     delete this.clientConnections[player.clientId];
-
   }
+  
   generateWinningCombos(size) {
     if (size < 3) {
       throw new Error("Invalid field size. Minimum size is 3x3.");
@@ -92,22 +108,22 @@ class TicTacToeServer {
 
     const winningCombos = [];
 
-  // Rows (Горизонтали)
-  for (let i = 0; i < size; i++) {
-    winningCombos.push(Array.from({ length: size }, (_, j) => i * size + j));
+    // Rows (Горизонтали)
+    for (let i = 0; i < size; i++) {
+      winningCombos.push(Array.from({ length: size }, (_, j) => i * size + j));
+    }
+
+    // Columns (Вертикали)
+    for (let i = 0; i < size; i++) {
+      winningCombos.push(Array.from({ length: size }, (_, j) => i + j * size));
+    }
+
+    // Diagonals (Диагонали)
+    winningCombos.push(Array.from({ length: size }, (_, i) => i * (size + 1)));  // Главная диагональ
+    winningCombos.push(Array.from({ length: size }, (_, i) => (size - 1) * (i + 1)));  // Побочная диагональ
+
+    return winningCombos;
   }
-
-  // Columns (Вертикали)
-  for (let i = 0; i < size; i++) {
-    winningCombos.push(Array.from({ length: size }, (_, j) => i + j * size));
-  }
-
-  // Diagonals (Диагонали)
-  winningCombos.push(Array.from({ length: size }, (_, i) => i * (size + 1)));  // Главная диагональ
-  winningCombos.push(Array.from({ length: size }, (_, i) => (size - 1) * (i + 1)));  // Побочная диагональ
-
-  return winningCombos;
-}
 
 
 
@@ -127,6 +143,7 @@ class TicTacToeServer {
 
 }
 
+// Класс игрока
 class Player {
   static clientIdCounter = 0;
 
@@ -170,6 +187,15 @@ class Player {
     }));
   }
 
+  sendExitMessage() {
+    if (this.connection.readyState === WebSocket.OPEN) {
+      this.connection.send(JSON.stringify({
+        method: "left",
+        message: "opponent left",
+      }));
+    }
+  }
+  
 
   sendUpdateMessage(turn, field) {
     this.connection.send(JSON.stringify({
