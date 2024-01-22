@@ -3,7 +3,7 @@ const path = require('path');
 const http = require("http");
 const WebSocket = require("ws");
 const Player = require('./player');
-
+const TicTacToeGame = require('./game')
 // Класс сервера "крестики-нолики"
 class TicTacToeServer {
   // Конструктор класса TicTacToeServer
@@ -15,7 +15,7 @@ class TicTacToeServer {
 
     // Список активных соединений клиентов WebSocket
     this.clientConnections = {};
-
+    this.game = new TicTacToeGame(3); // Пример: поле размером 3x3
     // Словарь для отслеживания соответствия оппонентов по их clientId
     this.opponents = {};
 
@@ -69,16 +69,17 @@ class TicTacToeServer {
     this.clientConnections[secondClientId].sendJoinMessage("O");
   }
 
+  
   moveHandler(result, clientId) {
     const opponentClientId = this.opponents[clientId];
 
-    if (this.checkWin(result.field, result.size)) {
+    if (this.game.checkWin(result.field)) {
       [clientId, opponentClientId].forEach(cid => {
         this.clientConnections[cid].sendResultMessage(`${result.symbol} win`, result.field, result.size);
-      })
+      });
     }
 
-    if (this.checkDraw(result.field, result.size)) {
+    if (this.game.checkDraw(result.field)) {
       [clientId, opponentClientId].forEach(cid => {
         this.clientConnections[cid].sendResultMessage("Draw", result.field);
       });
@@ -102,49 +103,6 @@ class TicTacToeServer {
     delete this.clientConnections[player.clientId];
   }
   
-  generateWinningCombos(size) {
-    if (size < 3) {
-      throw new Error("Invalid field size. Minimum size is 3x3.");
-    }
-
-    const winningCombos = [];
-
-    // Rows (Горизонтали)
-    for (let i = 0; i < size; i++) {
-      winningCombos.push(Array.from({ length: size }, (_, j) => i * size + j));
-    }
-
-    // Columns (Вертикали)
-    for (let i = 0; i < size; i++) {
-      winningCombos.push(Array.from({ length: size }, (_, j) => i + j * size));
-    }
-
-    // Diagonals (Диагонали)
-    winningCombos.push(Array.from({ length: size }, (_, i) => i * (size + 1)));  // Главная диагональ
-    winningCombos.push(Array.from({ length: size }, (_, i) => (size - 1) * (i + 1)));  // Побочная диагональ
-
-    return winningCombos;
-  }
-
-
-
-  checkWin(field, size) {
-    const winningCombos = this.generateWinningCombos(size);
-    // Проверка по горизонтали, вертикали и диагонали
-    const checkCombo = (combo) => {
-      const symbols = combo.map(index => field[index]);
-      return symbols.every(symbol => symbol !== "" && symbol === symbols[0]);
-    };
-    return winningCombos.some(combo => checkCombo(combo));
-  }
-
-  checkDraw(field, size) {
-    // Проверяем, что все ячейки заполнены
-    const isFieldFilled = field.every(symbol => symbol === "X" || symbol === "O");
-  
-    // Если поле заполнено и при этом нет победителя, то это ничья
-    return isFieldFilled && !this.checkWin(field, size);
-  }
   
 
 }
