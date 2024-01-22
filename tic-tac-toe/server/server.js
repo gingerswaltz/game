@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const http = require("http");
 const WebSocket = require("ws");
+const Player = require('./player');
 
 // Класс сервера "крестики-нолики"
 class TicTacToeServer {
@@ -51,7 +52,7 @@ class TicTacToeServer {
 
   matchClients(clientId) {
     this.clientIdsWaitingMatch.push(clientId);
-
+    
     if (this.clientIdsWaitingMatch.length < 2) return;
 
 
@@ -77,7 +78,7 @@ class TicTacToeServer {
       })
     }
 
-    if (this.checkDraw(result.field)) {
+    if (this.checkDraw(result.field, result.size)) {
       [clientId, opponentClientId].forEach(cid => {
         this.clientConnections[cid].sendResultMessage("Draw", result.field);
       });
@@ -137,73 +138,15 @@ class TicTacToeServer {
     return winningCombos.some(combo => checkCombo(combo));
   }
 
-  checkDraw(field) {
-    return field.every(symbol => symbol === "X" || symbol === "O");
-  }
-
-}
-
-// Класс игрока
-class Player {
-  static clientIdCounter = 0;
-
-  constructor(connection, server) {
-    this.connection = connection;
-    this.server = server;
-    this.clientId = ++Player.clientIdCounter;
-    this.isWaitingMatch = true;
-
-    this.connection.on("message", this.handleMessage.bind(this));
-    this.connection.on("close", this.handleClose.bind(this));
-  }
-
-  handleMessage(message) {
-    const result = JSON.parse(message);
-
-    if (result.method === "move") {
-      this.server.moveHandler(result, this.clientId);
-    }
-  }
-
-  handleClose() {
-    this.server.closeClient(this);
-  }
-
-  sendJoinMessage(symbol) {
-    this.connection.send(JSON.stringify({
-      method: "join",
-      symbol: symbol,
-      turn: "X"
-    }));
-    this.isWaitingMatch = false;
-  }
-
-  sendResultMessage(message, field, size) {
-    this.connection.send(JSON.stringify({
-      method: "result",
-      message: message,
-      field: field,
-      size: size,
-    }));
-  }
-
-  sendExitMessage() {
-    if (this.connection.readyState === WebSocket.OPEN) {
-      this.connection.send(JSON.stringify({
-        method: "left",
-        message: "opponent left",
-      }));
-    }
+  checkDraw(field, size) {
+    // Проверяем, что все ячейки заполнены
+    const isFieldFilled = field.every(symbol => symbol === "X" || symbol === "O");
+  
+    // Если поле заполнено и при этом нет победителя, то это ничья
+    return isFieldFilled && !this.checkWin(field, size);
   }
   
 
-  sendUpdateMessage(turn, field) {
-    this.connection.send(JSON.stringify({
-      method: "update",
-      turn: turn,
-      field: field,
-    }));
-  }
 }
 
 const ticTacToeServer = new TicTacToeServer();
