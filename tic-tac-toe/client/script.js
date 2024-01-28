@@ -1,11 +1,106 @@
-const cellElements = document.querySelectorAll('.cell');
+// script.js
+let size = 3; // Инициализируем размер по умолчанию
+let cellElements = [];
 const messageElement = document.querySelector('.message');
-let field = ["", "", "", "", "", "", "", "", ""];
+let field = Array(size * size).fill(""); // Используем fill для инициализации массива пустыми значениями
 let isGameActive = false;
 let symbol = null;
 let turn = null;
-let size = 3;
-let ws = new WebSocket("ws://localhost:8080");
+let ws;
+
+// Функция для инициализации WebSocket
+function initializeWebSocket() {
+  ws = new WebSocket("ws://localhost:8080");
+
+  ws.onopen = function () {
+    // Отправка информации о размере поля на сервер
+    ws.send(JSON.stringify({
+      "method": "resize",
+      "size": size,
+    }));
+  };
+
+}
+
+// генерация полей
+function generateField() {
+  field = Array(size * size).fill(""); // Пересоздаем поле при изменении размера
+  generateBoard(size);
+  updateBoard();
+  cellElements = document.querySelectorAll('.cell');
+
+  // Инициализация WebSocket
+  initializeWebSocket();
+cellElements.forEach((cell, index) => cell.addEventListener('click', (event) => {
+  console.log(cellElements);
+  console.log("cell clicked: ", cell, index);
+  makeMove(event.target, index);
+}));
+}
+
+
+// кнопки изменения размера
+document.getElementById('size3Button').addEventListener('click', function () {
+  changeBoardSize(3);
+});
+document.getElementById('size4Button').addEventListener('click', function () {
+  changeBoardSize(4);
+});
+document.getElementById('size5Button').addEventListener('click', function () {
+  changeBoardSize(5);
+});
+
+function generateBoard(size) {
+  console.log("Generating board with size:", size);
+
+  const board = document.querySelector(".board");
+  board.innerHTML = ""; // Очищаем существующее поле
+
+  let columns;
+  switch (size) {
+    case 3:
+      columns = 3;
+      break;
+    case 4:
+      columns = 4;
+      break;
+    case 5:
+      columns = 5;
+      break;
+    default:
+      columns = 3;
+      break;
+  }
+
+
+  // Создаем сетку с заданным количеством колонок
+  board.style.gridTemplateColumns = `repeat(${columns}, 20vmin)`;
+
+  for (let i = 0; i < size * size; i++) {
+    const cell = document.createElement("div");
+    cell.classList.add("cell");
+
+    // Создаем текстовый узел с неразрывным пробелом и добавляем его в ячейку
+    // const space = document.createTextNode("\u00A0");
+    // cell.appendChild(space);
+
+    board.appendChild(cell);
+  }
+
+  console.log("Board generated successfully");
+}
+
+// сеттер размера
+function changeBoardSize(newSize) {
+  size = newSize;
+
+  ws.send(JSON.stringify({
+    "method": "resize",
+    "size": size,
+  }));  
+  generateField();
+}
+
 
 ws.onmessage = message => {
   const response = JSON.parse(message.data);
@@ -38,14 +133,16 @@ ws.onmessage = message => {
     isGameActive = false;
     messageElement.textContent = response.message;
   }
+
 };
 
-cellElements.forEach((cell, index) => cell.addEventListener('click', (event) => {
-  makeMove(event.target, index);
-}));
+
 
 function makeMove(cell, index) {
+  console.log("Making a move...");
+
   if (!isGameActive || field[index] !== "") {
+    console.log("Invalid move. Game is not active or cell is already occupied.");
     return;
   }
 
@@ -68,6 +165,8 @@ function updateBoard() {
   });
 }
 
+
+
 function updateMessage() {
   if (symbol === turn) {
     messageElement.textContent = "move";
@@ -75,3 +174,4 @@ function updateMessage() {
     messageElement.textContent = `waiting ${turn}...`;
   }
 }
+

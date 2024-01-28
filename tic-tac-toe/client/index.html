@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,24 +6,26 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script type="module" src="./script.js"></script>
   <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./script.js" defer>
+  </script>
   <title>Tic Tac Toe</title>
 </head>
 
 <body>
   <div class="message">searching...</div>
   <div class="board">
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
-    <div class="cell"></div>
+    <!-- Cells will be dynamically generated based on the selected size -->
   </div>
+
+  <!-- Add buttons for different board sizes -->
+  <div>
+    <button id="size3Button">3x3</button>
+    <button id="size4Button">4x4</button>
+    <button id="size5Button">5x5</button>
+  </div>
+ 
+
 </body>
 
 </html>

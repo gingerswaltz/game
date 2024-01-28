@@ -31,6 +31,8 @@ body {
   position: relative;
   cursor: pointer;
   background-color: #12bdac;
+  width: 20vmin;  /* Используем относительные единицы */
+  height: 20vmin; /* Используем относительные единицы */
 }
 
 .cell.X:before,

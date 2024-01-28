@@ -26,7 +26,10 @@ class TicTacToeGame {
         return winningCombos;
       }
     
-    
+      renewSize(size){
+        this.generateWinningCombos;
+        this.size=size;
+      }
     
       checkWin(field) {
         const winningCombos = this.winningCombos;

@@ -1,3 +1,4 @@
+// server.js
 const express = require('express');
 const path = require('path');
 const http = require("http");
@@ -49,6 +50,7 @@ class TicTacToeServer {
     this.matchClients(player.clientId);
   }
 
+  
 
   matchClients(clientId) {
     this.clientIdsWaitingMatch.push(clientId);
@@ -67,12 +69,13 @@ class TicTacToeServer {
     // Отправляем сообщение о присоединении первому и второму клиентам
     this.clientConnections[firstClientId].sendJoinMessage("X");
     this.clientConnections[secondClientId].sendJoinMessage("O");
+    
   }
 
   
   moveHandler(result, clientId) {
     const opponentClientId = this.opponents[clientId];
-
+    
     if (this.game.checkWin(result.field)) {
       [clientId, opponentClientId].forEach(cid => {
         this.clientConnections[cid].sendResultMessage(`${result.symbol} win`, result.field, result.size);
@@ -104,6 +107,13 @@ class TicTacToeServer {
   }
   
   
+  handleMessage(message) {
+    const result = JSON.parse(message);
+
+    if (result.method === "resize") {
+        this.game.renewSize(result.size);
+    }
+}
 
 }
 

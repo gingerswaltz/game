@@ -25,12 +25,13 @@ class Player {
     handleClose() {
         this.server.closeClient(this);
     }
-
+    
     sendJoinMessage(symbol) {
         this.connection.send(JSON.stringify({
             method: "join",
             symbol: symbol,
-            turn: "X"
+            turn: "X",
+            size: this.server.game.size,
         }));
         this.isWaitingMatch = false;
     }
