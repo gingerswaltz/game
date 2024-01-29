@@ -9,6 +9,7 @@ let turn = null;
 let ws = new WebSocket("ws://localhost:8080");
 const buttonContainer = document.getElementById("sizeButtons");
 buttonContainer.style.display = 'none';
+
 // генерация полей
 function generateField() {
   field = Array(size * size).fill(""); // Пересоздаем поле при изменении размера
@@ -33,6 +34,8 @@ document.getElementById('size5Button').addEventListener('click', function () {
   changeBoardSize(5);
 });
 
+
+//  генерация игрового поля
 function generateBoard(size) {
 
   const board = document.querySelector(".board");
@@ -79,7 +82,9 @@ function changeBoardSize(newSize) {
 
 ws.onmessage = message => {
   const response = JSON.parse(message.data);
-  console.log("From server:", response);
+  //console.log("From server: ", response);
+  
+  // Обработка входа игрока
   if (response.method === "join") {
     symbol = response.symbol;
     turn = response.turn;
@@ -89,6 +94,7 @@ ws.onmessage = message => {
     updateMessage();
   }
 
+  // Выведем сообщение о состоянии хода (кто ходит?)
   if (response.method === "update") {
     field = response.field;
     turn = response.turn;
@@ -98,6 +104,7 @@ ws.onmessage = message => {
     buttonContainer.style.display = 'none';
   }
 
+  // Выведем сообщение об исходе схватки
   if (response.method === "result") {
     field = response.field;
     updateBoard();
@@ -107,23 +114,25 @@ ws.onmessage = message => {
     }, 100);
   }
 
+  // Выведем сообщение о выходе оппонента
   if (response.method === "left") {
     isGameActive = false;
     messageElement.textContent = response.message;
   }
-
+  
+  // Хосту отрисуем кнопки изменения размера
   if (response.method === "isHost") {
     buttonContainer.style.display = 'block';
   }
 };
 
 
-
+// обработка нажатия на клетку
 function makeMove(cell, index) {
   console.log("Making a move...");
 
   if (!isGameActive || field[index] !== "") {
-    console.log("Invalid move. Game is not active or cell is already occupied.");
+    //console.log("Invalid move. Game is not active or cell is already occupied.");
     return;
   }
 

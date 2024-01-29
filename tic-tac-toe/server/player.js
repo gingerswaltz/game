@@ -9,7 +9,7 @@ class Player {
         this.server = server;
         this.clientId = ++Player.clientIdCounter;
         this.isWaitingMatch = true;
-        this.isHost = false;
+        this.isHost = false; // Станет true в особом случае на сервере 
         this.connection.on("message", this.handleMessage.bind(this));
         this.connection.on("close", this.handleClose.bind(this));
     }

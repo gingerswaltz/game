@@ -56,9 +56,12 @@ class TicTacToeServer {
     this.clientIdsWaitingMatch.push(clientId);
 
     if (this.clientIdsWaitingMatch.length < 2) {
-      console.log ("[SERVER]  Waiting match length: ", this.clientIdsWaitingMatch.length);
-      console.log("[SERVER] Choosing a host: ", this.clientConnections[clientId]);
+      //console.log ("[SERVER]  Waiting match length: ", this.clientIdsWaitingMatch.length);
+      //console.log("[SERVER] Choosing a host: ", this.clientConnections[clientId]);
+      
+      // Если данный клиент подключился к игре первее, он будет хостом. Ставим флаг хоста true
       this.clientConnections[clientId].isHost = true;
+      // Отсылаем интерфейсу информацию о хосте
       this.clientConnections[clientId].sendHostMessage();
       return;
     }
