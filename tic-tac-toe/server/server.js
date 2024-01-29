@@ -50,13 +50,18 @@ class TicTacToeServer {
     this.matchClients(player.clientId);
   }
 
-  
+
 
   matchClients(clientId) {
     this.clientIdsWaitingMatch.push(clientId);
-    
-    if (this.clientIdsWaitingMatch.length < 2) return;
 
+    if (this.clientIdsWaitingMatch.length < 2) {
+      console.log ("[SERVER]  Waiting match length: ", this.clientIdsWaitingMatch.length);
+      console.log("[SERVER] Choosing a host: ", this.clientConnections[clientId]);
+      this.clientConnections[clientId].isHost = true;
+      this.clientConnections[clientId].sendHostMessage();
+      return;
+    }
 
     // Извлекаем первого и второго клиентов из очереди ожидания
     const firstClientId = this.clientIdsWaitingMatch.shift();
@@ -69,13 +74,13 @@ class TicTacToeServer {
     // Отправляем сообщение о присоединении первому и второму клиентам
     this.clientConnections[firstClientId].sendJoinMessage("X");
     this.clientConnections[secondClientId].sendJoinMessage("O");
-    
+
   }
 
-  
+
   moveHandler(result, clientId) {
     const opponentClientId = this.opponents[clientId];
-    
+
     if (this.game.checkWin(result.field)) {
       [clientId, opponentClientId].forEach(cid => {
         this.clientConnections[cid].sendResultMessage(`${result.symbol} win`, result.field, result.size);
@@ -105,15 +110,15 @@ class TicTacToeServer {
     player.connection.close();
     delete this.clientConnections[player.clientId];
   }
-  
-  
-//   handleMessage(message) {
-//     const result = JSON.parse(message);
 
-//     if (result.method === "resize") {
-//         this.game.renewSize(result.size);
-//     }
-// }
+
+  //   handleMessage(message) {
+  //     const result = JSON.parse(message);
+
+  //     if (result.method === "resize") {
+  //         this.game.renewSize(result.size);
+  //     }
+  // }
 
 }
 

@@ -8,7 +8,7 @@ let symbol = null;
 let turn = null;
 let ws = new WebSocket("ws://localhost:8080");
 const buttonContainer = document.getElementById("sizeButtons");
-buttonContainer.style.display = 'block';
+buttonContainer.style.display = 'none';
 // генерация полей
 function generateField() {
   field = Array(size * size).fill(""); // Пересоздаем поле при изменении размера
@@ -112,6 +112,9 @@ ws.onmessage = message => {
     messageElement.textContent = response.message;
   }
 
+  if (response.method === "isHost") {
+    buttonContainer.style.display = 'block';
+  }
 };
 
 

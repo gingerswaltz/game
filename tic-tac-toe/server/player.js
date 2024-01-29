@@ -9,7 +9,7 @@ class Player {
         this.server = server;
         this.clientId = ++Player.clientIdCounter;
         this.isWaitingMatch = true;
-
+        this.isHost = false;
         this.connection.on("message", this.handleMessage.bind(this));
         this.connection.on("close", this.handleClose.bind(this));
     }
@@ -65,6 +65,15 @@ class Player {
             turn: turn,
             field: field,
         }));
+    }
+
+    sendHostMessage() {
+        if (this.isHost) {
+            this.connection.send(JSON.stringify({
+                method: "isHost",
+            }));
+        }
+
     }
 }
 
