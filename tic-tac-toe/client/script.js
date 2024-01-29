@@ -6,20 +6,13 @@ let field = Array(size * size).fill(""); // Используем fill для и�
 let isGameActive = false;
 let symbol = null;
 let turn = null;
-let ws;
-
-// Функция для инициализации WebSocket
-function initializeWebSocket() {
-  ws = new WebSocket("ws://localhost:8080");
-
-  ws.onopen = function () {
-    // Отправка информации о размере поля на сервер
-    ws.send(JSON.stringify({
-      "method": "resize",
-      "size": size,
-    }));
-  };
-
+let ws = new WebSocket("ws://localhost:8080");
+ws.onopen = function () {
+  // Отправка информации о размере поля на сервер
+  ws.send(JSON.stringify({
+    "method": "resize",
+    "size": size,
+  }));
 }
 
 // генерация полей
@@ -29,8 +22,6 @@ function generateField() {
   updateBoard();
   cellElements = document.querySelectorAll('.cell');
 
-  // Инициализация WebSocket
-  initializeWebSocket();
 cellElements.forEach((cell, index) => cell.addEventListener('click', (event) => {
   console.log(cellElements);
   console.log("cell clicked: ", cell, index);
