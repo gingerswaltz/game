@@ -7,8 +7,8 @@ let isGameActive = false;
 let symbol = null;
 let turn = null;
 let ws = new WebSocket("ws://localhost:8080");
-
-
+const buttonContainer = document.getElementById("sizeButtons");
+buttonContainer.style.display = 'block';
 // генерация полей
 function generateField() {
   field = Array(size * size).fill(""); // Пересоздаем поле при изменении размера
@@ -16,11 +16,9 @@ function generateField() {
   updateBoard();
   cellElements = document.querySelectorAll('.cell');
 
-cellElements.forEach((cell, index) => cell.addEventListener('click', (event) => {
-  console.log(cellElements);
-  console.log("cell clicked: ", cell, index);
-  makeMove(event.target, index);
-}));
+  cellElements.forEach((cell, index) => cell.addEventListener('click', (event) => {
+    makeMove(event.target, index);
+  }));
 }
 
 
@@ -36,7 +34,6 @@ document.getElementById('size5Button').addEventListener('click', function () {
 });
 
 function generateBoard(size) {
-  console.log("Generating board with size:", size);
 
   const board = document.querySelector(".board");
   board.innerHTML = ""; // Очищаем существующее поле
@@ -66,7 +63,6 @@ function generateBoard(size) {
     cell.classList.add("cell");
     board.appendChild(cell);
   }
-  console.log("Board generated successfully");
 }
 
 // сеттер размера
@@ -99,6 +95,7 @@ ws.onmessage = message => {
     isGameActive = symbol === turn;
     updateBoard();
     updateMessage();
+    buttonContainer.style.display = 'none';
   }
 
   if (response.method === "result") {
@@ -151,8 +148,10 @@ function updateBoard() {
 function updateMessage() {
   if (symbol === turn) {
     messageElement.textContent = "move";
+    buttonContainer.style.display = 'none';
   } else {
     messageElement.textContent = `waiting ${turn}...`;
+    buttonContainer.style.display = 'none';
   }
 }
 
