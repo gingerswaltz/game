@@ -1,5 +1,5 @@
 // script.js
-let size = 3; // Инициализируем размер по умолчанию
+let size = null; // Инициализируем размер по умолчанию
 let cellElements = [];
 const messageElement = document.querySelector('.message');
 let field = Array(size * size).fill(""); // Используем fill для инициализации массива пустыми значениями
@@ -7,13 +7,7 @@ let isGameActive = false;
 let symbol = null;
 let turn = null;
 let ws = new WebSocket("ws://localhost:8080");
-ws.onopen = function () {
-  // Отправка информации о размере поля на сервер
-  ws.send(JSON.stringify({
-    "method": "resize",
-    "size": size,
-  }));
-}
+
 
 // генерация полей
 function generateField() {
@@ -70,14 +64,8 @@ function generateBoard(size) {
   for (let i = 0; i < size * size; i++) {
     const cell = document.createElement("div");
     cell.classList.add("cell");
-
-    // Создаем текстовый узел с неразрывным пробелом и добавляем его в ячейку
-    // const space = document.createTextNode("\u00A0");
-    // cell.appendChild(space);
-
     board.appendChild(cell);
   }
-
   console.log("Board generated successfully");
 }
 
@@ -88,7 +76,7 @@ function changeBoardSize(newSize) {
   ws.send(JSON.stringify({
     "method": "resize",
     "size": size,
-  }));  
+  }));
   generateField();
 }
 
@@ -99,7 +87,9 @@ ws.onmessage = message => {
   if (response.method === "join") {
     symbol = response.symbol;
     turn = response.turn;
+    size = response.size;
     isGameActive = symbol === turn;
+    changeBoardSize(size);
     updateMessage();
   }
 

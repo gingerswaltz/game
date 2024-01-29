@@ -107,13 +107,13 @@ class TicTacToeServer {
   }
   
   
-  handleMessage(message) {
-    const result = JSON.parse(message);
+//   handleMessage(message) {
+//     const result = JSON.parse(message);
 
-    if (result.method === "resize") {
-        this.game.renewSize(result.size);
-    }
-}
+//     if (result.method === "resize") {
+//         this.game.renewSize(result.size);
+//     }
+// }
 
 }
 

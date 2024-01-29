@@ -27,8 +27,10 @@ class TicTacToeGame {
       }
     
       renewSize(size){
-        this.generateWinningCombos;
+        //console.log("[GAME] Got new size: ", size)
+        this.winningCombos=this.generateWinningCombos();
         this.size=size;
+        console.log()
       }
     
       checkWin(field) {
