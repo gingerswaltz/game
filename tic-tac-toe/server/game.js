@@ -1,9 +1,12 @@
 
 // Класс игры "крестики-нолики"
 class TicTacToeGame {
+  static gameIdCounter = 0;
   constructor(size) {
+    this.gameId = ++TicTacToeGame.gameIdCounter;
     this.size = size;
     this.winningCombos = this.generateWinningCombos(size);
+    this.currentPlayers = [];
   }
 
   generateWinningCombos() {

@@ -10,6 +10,7 @@ class Player {
         this.clientId = ++Player.clientIdCounter;
         this.isWaitingMatch = true;
         this.isHost = false; // Станет true в особом случае на сервере 
+        this.gameId = null; // изначально у игрока нет gameId
         this.connection.on("message", this.handleMessage.bind(this));
         this.connection.on("close", this.handleClose.bind(this));
     }
@@ -21,7 +22,7 @@ class Player {
             this.server.moveHandler(result, this.clientId);
         }
         if (result.method === "resize") {
-            this.server.game.renewSize(result.size)
+            this.server.games[this.server.games.length-1].renewSize(result.size)
         }
 
     }
@@ -35,7 +36,7 @@ class Player {
             method: "join",
             symbol: symbol,
             turn: "X",
-            size: this.server.game.size,
+            size: this.server.games[this.server.games.length-1].size,
         }));
         this.isWaitingMatch = false;
     }

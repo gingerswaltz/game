@@ -4,7 +4,7 @@ const path = require('path');
 const http = require("http");
 const WebSocket = require("ws");
 const Player = require('./player');
-const TicTacToeGame = require('./game')
+const game = require('./game')
 // Класс сервера "крестики-нолики"
 class TicTacToeServer {
   // Конструктор класса TicTacToeServer
@@ -16,7 +16,7 @@ class TicTacToeServer {
 
     // Список активных соединений клиентов WebSocket
     this.clientConnections = {};
-    this.game = new TicTacToeGame(3); // Пример: поле размером 3x3
+    this.games = [];
     // Словарь для отслеживания соответствия оппонентов по их clientId
     this.opponents = {};
 
@@ -59,21 +59,31 @@ class TicTacToeServer {
       //console.log ("[SERVER]  Waiting match length: ", this.clientIdsWaitingMatch.length);
       //console.log("[SERVER] Choosing a host: ", this.clientConnections[clientId]);
       
-      // Если данный клиент подключился к игре первее, он будет хостом. Ставим флаг хоста true
+      // Если данный ИГРОК подключился к игре первее, он будет хостом. Ставим флаг хоста true
       this.clientConnections[clientId].isHost = true;
       // Отсылаем интерфейсу информацию о хосте
       this.clientConnections[clientId].sendHostMessage();
+      // Создаем игру
+      this.games.push(new game(0));
+      // Добавим игрока в список игроков в новой сессии
+      this.games[this.games.length-1].
+      currentPlayers.
+      push(this.clientConnections[clientId]);
+      // Назначим первому игроку номер игры
+      this.clientConnections[clientId].gameId = this.games[this.games.length-1].gameId;
       return;
     }
 
     // Извлекаем первого и второго клиентов из очереди ожидания
     const firstClientId = this.clientIdsWaitingMatch.shift();
     const secondClientId = this.clientIdsWaitingMatch.shift();
-
+    // присваиваем номер игры
+    this.clientConnections[secondClientId].gameId = this.clientConnections[firstClientId].gameId;
+    
     // Устанавливаем соответствие между первым и вторым клиентами
     this.opponents[firstClientId] = secondClientId;
     this.opponents[secondClientId] = firstClientId;
-
+    
     // Отправляем сообщение о присоединении первому и второму клиентам
     this.clientConnections[firstClientId].sendJoinMessage("X");
     this.clientConnections[secondClientId].sendJoinMessage("O");
@@ -83,14 +93,15 @@ class TicTacToeServer {
 
   moveHandler(result, clientId) {
     const opponentClientId = this.opponents[clientId];
+    const gameId = this.clientConnections[clientId].gameId;
 
-    if (this.game.checkWin(result.field)) {
+    if (this.games[gameId-1].checkWin(result.field)) {
       [clientId, opponentClientId].forEach(cid => {
         this.clientConnections[cid].sendResultMessage(`${result.symbol} win`, result.field, result.size);
       });
     }
 
-    if (this.game.checkDraw(result.field)) {
+    if (this.games[gameId-1].checkDraw(result.field)) {
       [clientId, opponentClientId].forEach(cid => {
         this.clientConnections[cid].sendResultMessage("Draw", result.field);
       });
