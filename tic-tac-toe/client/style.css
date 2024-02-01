@@ -41,10 +41,34 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 15vmin;
+  width: 10vmin;
   height: 2vmin;
   background: #545454;
 }
+
+
+.cell.X-img:before,
+.cell.X-img:after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 17vmin;
+  height: 17vmin;
+  background: none; /* Убираем фон, так как будем использовать background-image */
+}
+
+.cell.X-img:before {
+  background-image: url('osipov1_vector.svg');
+  background-size: cover; /* Растягиваем изображение, чтобы оно занимало всю площадь */
+}
+
+.cell.X-img:after {
+  background-image: url('osipov1_vector.svg');
+  background-size: cover; /* Растягиваем изображение, чтобы оно занимало всю площадь */
+}
+
 
 .cell.X:before {
   transform: translate(-50%, -50%) rotate(45deg);

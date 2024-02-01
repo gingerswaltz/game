@@ -9,6 +9,8 @@ let turn = null;
 let ws = new WebSocket("ws://localhost:8080");
 const buttonContainer = document.getElementById("sizeButtons");
 buttonContainer.style.display = 'none';
+let isCustom = false;
+const board = document.querySelector('.board');
 
 // генерация полей
 function generateField() {
@@ -21,7 +23,6 @@ function generateField() {
     makeMove(event.target, index);
   }));
 }
-
 
 // кнопки изменения размера
 document.getElementById('size3Button').addEventListener('click', function () {
@@ -83,12 +84,12 @@ function changeBoardSize(newSize) {
 ws.onmessage = message => {
   const response = JSON.parse(message.data);
   //console.log("From server: ", response);
-  
+
   // Обработка входа игрока
   if (response.method === "join") {
     symbol = response.symbol;
     turn = response.turn;
-    size = response.size;
+    size = size === null ? 3 : size;
     isGameActive = symbol === turn;
     changeBoardSize(size);
     updateMessage();
@@ -119,25 +120,34 @@ ws.onmessage = message => {
     isGameActive = false;
     messageElement.textContent = response.message;
   }
-  
+
   // Хосту отрисуем кнопки изменения размера
   if (response.method === "isHost") {
     buttonContainer.style.display = 'block';
   }
 };
 
-
 // обработка нажатия на клетку
 function makeMove(cell, index) {
-  console.log("Making a move...");
 
   if (!isGameActive || field[index] !== "") {
-    //console.log("Invalid move. Game is not active or cell is already occupied.");
     return;
   }
 
   isGameActive = false;
-  cell.classList.add(symbol);
+
+  // Убираем классы X и X-img, если они были установлены ранее
+  cell.classList.remove('X', 'X-img');
+
+  // Добавляем класс X-img, если символ - X
+  if (symbol === 'X') {
+    cell.classList.remove('X');
+    cell.classList.add('X-img');
+  } else {
+    // Иначе добавляем класс O-img
+    cell.classList.add('O-img');
+  }
+
   field[index] = symbol;
 
   ws.send(JSON.stringify({
@@ -147,6 +157,8 @@ function makeMove(cell, index) {
     "size": size,
   }));
 }
+
+
 
 function updateBoard() {
   cellElements.forEach((cell, index) => {
