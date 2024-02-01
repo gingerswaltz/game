@@ -135,18 +135,15 @@ function makeMove(cell, index) {
   }
 
   isGameActive = false;
-
-  // Убираем классы X и X-img, если они были установлены ранее
-  cell.classList.remove('X', 'X-img');
-
-  // Добавляем класс X-img, если символ - X
-  if (symbol === 'X') {
-    cell.classList.remove('X');
-    cell.classList.add('X-img');
-  } else {
-    // Иначе добавляем класс O-img
-    cell.classList.add('O-img');
-  }
+  
+  // // Добавляем класс X-img, если символ - X
+  // if (symbol === 'X') {
+  //   cell.classList.add('X-img');
+  // } else {
+  //   // Иначе добавляем класс O-img
+  //   cell.classList.add('O-img');
+  //   console.log(cell.classList)
+  // }
 
   field[index] = symbol;
 
@@ -160,10 +157,10 @@ function makeMove(cell, index) {
 
 
 
+
 function updateBoard() {
   cellElements.forEach((cell, index) => {
-    cell.classList.remove("X", "O");
-    field[index] !== "" && cell.classList.add(field[index]);
+    field[index] !== "" && cell.classList.add(field[index] + "-img"); // Добавляем соответствующий класс суффикса -img
   });
 }
 

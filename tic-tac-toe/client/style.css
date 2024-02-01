@@ -99,3 +99,26 @@ body {
   text-transform: uppercase;
   color: #f2ebd3;
 }
+
+
+.cell.O-img:before {
+  background-image: url('petan1_vector.svg');
+  background-size: cover; /* Растягиваем изображение, чтобы оно занимало всю площадь */
+}
+
+.cell.O-img:after {
+  background-image: url('petan1_vector.svg');
+  background-size: cover; /* Растягиваем изображение, чтобы оно занимало всю площадь */
+}
+
+
+.cell.O-img:before,
+.cell.O-img:after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 17vmin;
+  height: 17vmin;
+}
