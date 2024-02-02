@@ -13,16 +13,19 @@ buttonContainer.style.display = 'none';
 let isCustom = false;
 const board = document.querySelector('.board');
 
-changeImageBtn.addEventListener('click', function () {
 
+// событие переключения с картинок на сток
+changeImageBtn.addEventListener('click', function () {
   handleImageChange();
 });
 
+// переключатель картинка/стоковые tic-tac
 function handleImageChange() {
   isCustom = !isCustom;
   console.log("custom flag:", isCustom);
   updateBoard();
 }
+
 // генерация полей
 function generateField() {
   field = Array(size * size).fill(""); // Пересоздаем поле при изменении размера
@@ -47,7 +50,7 @@ document.getElementById('size5Button').addEventListener('click', function () {
 });
 
 
-//  генерация игрового поля
+// генерация игрового поля
 function generateBoard(size) {
 
   const board = document.querySelector(".board");
@@ -100,7 +103,7 @@ ws.onmessage = message => {
   if (response.method === "join") {
     symbol = response.symbol;
     turn = response.turn;
-    size = size === null ? 3 : size;
+    size = response.size === 0 ? 3 : response.size;
     isGameActive = symbol === turn;
     changeBoardSize(size);
     updateMessage();
@@ -160,7 +163,7 @@ function makeMove(cell, index) {
 }
 
 
-
+// обновление доски
 function updateBoard() {
   cellElements.forEach((cell, index) => {
     if (isCustom) {
@@ -183,7 +186,7 @@ function updateBoard() {
 }
 
 
-
+// функция обновления состояния игры
 function updateMessage() {
   if (symbol === turn) {
     messageElement.textContent = "move";
