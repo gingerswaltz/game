@@ -1,3 +1,4 @@
+
 // script.js
 let size = null; // Инициализируем размер по умолчанию
 let cellElements = [];
@@ -12,6 +13,16 @@ buttonContainer.style.display = 'none';
 let isCustom = false;
 const board = document.querySelector('.board');
 
+changeImageBtn.addEventListener('click', function () {
+
+  handleImageChange();
+});
+
+function handleImageChange() {
+  isCustom = !isCustom;
+  console.log("custom flag:", isCustom);
+  updateBoard();
+}
 // генерация полей
 function generateField() {
   field = Array(size * size).fill(""); // Пересоздаем поле при изменении размера
@@ -135,15 +146,8 @@ function makeMove(cell, index) {
   }
 
   isGameActive = false;
-  
-  // // Добавляем класс X-img, если символ - X
-  // if (symbol === 'X') {
-  //   cell.classList.add('X-img');
-  // } else {
-  //   // Иначе добавляем класс O-img
-  //   cell.classList.add('O-img');
-  //   console.log(cell.classList)
-  // }
+
+
 
   field[index] = symbol;
 
@@ -157,10 +161,24 @@ function makeMove(cell, index) {
 
 
 
-
 function updateBoard() {
   cellElements.forEach((cell, index) => {
-    field[index] !== "" && cell.classList.add(field[index] + "-img"); // Добавляем соответствующий класс суффикса -img
+    if (isCustom) {
+      if (field[index] !== "") {
+        cell.classList.remove(field[index] + "-img"); // Убираем текущий класс
+        cell.classList.remove(field[index]); // Убираем текущий класс суффикса -img
+        //console.log("Custom true", cell.classList);
+
+        cell.classList.add(field[index] + "-img"); // Добавляем соответствующий класс суффикса -img
+      }
+    } else {
+      if (field[index] !== "") {
+        cell.classList.remove(field[index]); // Убираем текущий класс суффикса -img
+        cell.classList.remove(field[index] + "-img"); // Убираем текущий класс суффикса -img
+       // console.log("Custom false", cell.classList);
+        cell.classList.add(field[index]);
+      }
+    }
   });
 }
 
