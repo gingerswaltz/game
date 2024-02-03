@@ -1,4 +1,3 @@
-
 // script.js
 let size = 0; // Инициализируем размер по умолчанию
 let cellElements = [];
@@ -9,7 +8,7 @@ let symbol = null;
 let turn = null;
 let ws = new WebSocket("ws://localhost:8080");
 const buttonContainer = document.getElementById("sizeButtons");
-const buttonImg = document.getElementById("changeImageBtn");
+const buttonImg = document.getElementById("changeImg");
 buttonContainer.style.display = 'none';
 buttonImg.style.display = 'none';
 let isCustom = false;
@@ -17,8 +16,9 @@ const board = document.querySelector('.board');
 const tictacImg = {
   "zemelya": ["./custom/osipov1.svg", "./custom/petan1.svg"],
   "cpu": ["./custom/intel.svg", "./custom/amd.svg"],
-};
-let selectedCategory;
+}; // категории картинок и их соответствие
+let selectedCategory; // выбранная категория картинок
+let isHostReady = false;
 
 // событие переключения с картинок на сток
 changeImageBtn.addEventListener('click', function () {
@@ -141,7 +141,7 @@ ws.onmessage = message => {
     isGameActive = symbol === turn;
     updateBoard();
     updateMessage();
-    buttonContainer.style.display = 'none';
+
   }
 
   // Выведем сообщение об исходе схватки
@@ -173,13 +173,8 @@ function makeMove(index) {
   if (!isGameActive || field[index] !== "") {
     return;
   }
-
   isGameActive = false;
-
-
-
   field[index] = symbol;
-
   ws.send(JSON.stringify({
     "method": "move",
     "symbol": symbol,
@@ -219,9 +214,12 @@ function updateMessage() {
   if (symbol === turn) {
     messageElement.textContent = "move";
     buttonContainer.style.display = 'none';
+    buttonImg.style.display = 'none';
+
   } else {
     messageElement.textContent = `waiting ${turn}...`;
     buttonContainer.style.display = 'none';
+    buttonImg.style.display = 'none';
   }
 }
 
