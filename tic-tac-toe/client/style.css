@@ -60,12 +60,12 @@ body {
 }
 
 .cell.X-img:before {
-  background-image: url('osipov1_vector.svg');
+  background-image:  var(--bg-img-before);
   background-size: cover; /* Растягиваем изображение, чтобы оно занимало всю площадь */
 }
 
 .cell.X-img:after {
-  background-image: url('osipov1_vector.svg');
+  background-image:  var(--bg-img-after);
   background-size: cover; /* Растягиваем изображение, чтобы оно занимало всю площадь */
 }
 
@@ -102,12 +102,12 @@ body {
 
 
 .cell.O-img:before {
-  background-image: url('petan1_vector.svg');
+  background-image: var(--bg-img-before);
   background-size: cover; /* Растягиваем изображение, чтобы оно занимало всю площадь */
 }
 
 .cell.O-img:after {
-  background-image: url('petan1_vector.svg');
+  background-image: var(--bg-img-after);
   background-size: cover; /* Растягиваем изображение, чтобы оно занимало всю площадь */
 }
 

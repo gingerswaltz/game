@@ -1,6 +1,6 @@
 
 // script.js
-let size = null; // Инициализируем размер по умолчанию
+let size = 0; // Инициализируем размер по умолчанию
 let cellElements = [];
 const messageElement = document.querySelector('.message');
 let field = Array(size * size).fill(""); // Используем fill для инициализации массива пустыми значениями
@@ -9,10 +9,16 @@ let symbol = null;
 let turn = null;
 let ws = new WebSocket("ws://localhost:8080");
 const buttonContainer = document.getElementById("sizeButtons");
+const buttonImg = document.getElementById("changeImageBtn");
 buttonContainer.style.display = 'none';
+buttonImg.style.display = 'none';
 let isCustom = false;
 const board = document.querySelector('.board');
-
+const tictacImg = {
+  "zemelya": ["./custom/osipov1.svg", "./custom/petan1.svg"],
+  "cpu": ["./custom/intel.svg", "./custom/amd.svg"],
+};
+let selectedCategory;
 
 // событие переключения с картинок на сток
 changeImageBtn.addEventListener('click', function () {
@@ -21,11 +27,26 @@ changeImageBtn.addEventListener('click', function () {
 
 // переключатель картинка/стоковые tic-tac
 function handleImageChange() {
-  isCustom = !isCustom;
-  console.log("custom flag:", isCustom);
+  const imageDropdown = document.getElementById('imageDropdown');
+  selectedCategory = imageDropdown.value.toLowerCase();
+  //console.log(selectedCategory);
+  if (selectedCategory != "stock")
+    isCustom = true;
+  else
+    isCustom = false;
+  //console.log("custom flag:", isCustom);
   updateBoard();
 }
 
+// Функция для обновления изображений с использованием значений из объекта
+function updateBackgroundImages() {
+  cellElements.forEach((cell, index) => {
+    const backgroundImage = `url('${tictacImg[selectedCategory][index % 2]}')`;
+    //console.log("Selected image: ", backgroundImage);
+    cell.style.setProperty('--bg-img-before', backgroundImage);
+    cell.style.setProperty('--bg-img-after', backgroundImage);
+  });
+}
 // генерация полей
 function generateField() {
   field = Array(size * size).fill(""); // Пересоздаем поле при изменении размера
@@ -33,10 +54,14 @@ function generateField() {
   updateBoard();
   cellElements = document.querySelectorAll('.cell');
 
+  cellElements.forEach((cell, index) => cell.removeEventListener('click', (event) => {
+    makeMove(index);
+  }));
   cellElements.forEach((cell, index) => cell.addEventListener('click', (event) => {
-    makeMove(event.target, index);
+    makeMove(index);
   }));
 }
+
 
 // кнопки изменения размера
 document.getElementById('size3Button').addEventListener('click', function () {
@@ -83,7 +108,7 @@ function generateBoard(size) {
   }
 }
 
-// сеттер размера
+// обновление размера поля
 function changeBoardSize(newSize) {
   size = newSize;
 
@@ -135,14 +160,15 @@ ws.onmessage = message => {
     messageElement.textContent = response.message;
   }
 
-  // Хосту отрисуем кнопки изменения размера
+  // Хосту отрисуем кнопки изменения визуала игры
   if (response.method === "isHost") {
     buttonContainer.style.display = 'block';
+    buttonImg.style.display = 'block';
   }
 };
 
 // обработка нажатия на клетку
-function makeMove(cell, index) {
+function makeMove(index) {
 
   if (!isGameActive || field[index] !== "") {
     return;
@@ -166,20 +192,22 @@ function makeMove(cell, index) {
 // обновление доски
 function updateBoard() {
   cellElements.forEach((cell, index) => {
+    // если выбраны картинки вместо стока
     if (isCustom) {
       if (field[index] !== "") {
-        cell.classList.remove(field[index] + "-img"); // Убираем текущий класс
-        cell.classList.remove(field[index]); // Убираем текущий класс суффикса -img
+        cell.classList.remove(field[index] + "-img"); // Убираем текущий класс суффикса -img
+        cell.classList.remove(field[index]); // Убираем текущий класс
+        updateBackgroundImages();
         //console.log("Custom true", cell.classList);
 
         cell.classList.add(field[index] + "-img"); // Добавляем соответствующий класс суффикса -img
       }
     } else {
       if (field[index] !== "") {
-        cell.classList.remove(field[index]); // Убираем текущий класс суффикса -img
+        cell.classList.remove(field[index]); // Убираем текущий класс поля
         cell.classList.remove(field[index] + "-img"); // Убираем текущий класс суффикса -img
-       // console.log("Custom false", cell.classList);
-        cell.classList.add(field[index]);
+        // console.log("Custom false", cell.classList);
+        cell.classList.add(field[index]); // Возвращаем сток
       }
     }
   });
