@@ -53,8 +53,8 @@ class TicTacToeServer {
     this.matchClients(player.clientId);
   }
 
-  
-  findGameIndexByClientId(clientId) {
+
+  findGameIndex(clientId) {
     // Ищем игру, в которой участвует игрок с указанным clientId
     for (let i = 0; i < this.games.length; i++) {
       const game = this.games[i];
@@ -94,6 +94,10 @@ class TicTacToeServer {
     // присваиваем номер игры
     this.clientConnections[secondClientId].gameId = this.clientConnections[firstClientId].gameId;
 
+    // Добавим игрока в список игроков в игровой комнате
+    this.games[this.games.length - 1].
+      currentPlayers.
+      push(this.clientConnections[secondClientId]);
     // Устанавливаем соответствие между первым и вторым клиентами
     this.opponents[firstClientId] = secondClientId;
     this.opponents[secondClientId] = firstClientId;
@@ -107,15 +111,15 @@ class TicTacToeServer {
 
   moveHandler(result, clientId) {
     const opponentClientId = this.opponents[clientId];
-    const gameId = this.clientConnections[clientId].gameId;
+    const gameIndex = this.findGameIndex(clientId);
 
-    if (this.games[gameId - 1].checkWin(result.field)) {
+    if (this.games[gameIndex].checkWin(result.field)) {
       [clientId, opponentClientId].forEach(cid => {
         this.clientConnections[cid].sendResultMessage(`${result.symbol} win`, result.field, result.size);
       });
     }
 
-    if (this.games[gameId - 1].checkDraw(result.field)) {
+    if (this.games[gameIndex].checkDraw(result.field)) {
       [clientId, opponentClientId].forEach(cid => {
         this.clientConnections[cid].sendResultMessage("Draw", result.field);
       });
@@ -149,7 +153,7 @@ class TicTacToeServer {
     }
 
   }
-  
+
   handleResizeMessage(clientId) {
     const opponentClientId = this.opponents[clientId];
 

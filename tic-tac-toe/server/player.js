@@ -10,7 +10,7 @@ class Player {
         this.clientId = ++Player.clientIdCounter;
         this.isWaitingMatch = true;
         this.isHost = false; // Станет true в особом случае на сервере 
-        this.gameId = null; // изначально у игрока нет gameId
+        this.gameId = null; // изначально у игрока нет gameId, он появится сразу после создания объекта игры
         this.connection.on("message", this.handleMessage.bind(this));
         this.connection.on("close", this.handleClose.bind(this));
     }
@@ -18,11 +18,13 @@ class Player {
     handleMessage(message) {
         const result = JSON.parse(message);
         //console.log("[PLAYER] Got new message: ", result);
+        const gameIndex = this.server.findGameIndex(this.clientId);
+
         if (result.method === "move") {
             this.server.moveHandler(result, this.clientId);
         }
         if (result.method === "resize") {
-            this.server.games[this.server.games.length - 1].renewSize(result.size);
+            this.server.games[gameIndex].renewSize(result.size);
             this.server.handleResizeMessage(this.clientId, result.size);
         }
         if (result.method === "hostReady") {
@@ -36,11 +38,13 @@ class Player {
     }
 
     sendJoinMessage(symbol) {
+        const gameIndex = this.server.findGameIndex(this.clientId);
+
         this.connection.send(JSON.stringify({
             method: "join",
             symbol: symbol,
             turn: "X",
-            size: this.server.games[this.server.games.length - 1].size,
+            size: this.server.games[gameIndex].size,
         }));
         this.isWaitingMatch = false;
     }
@@ -87,10 +91,11 @@ class Player {
         }));
     }
 
-    sendResizeMessage(){
+    sendResizeMessage() {
+        const gameIndex = this.server.findGameIndex(this.clientId);
         this.connection.send(JSON.stringify({
             method: "resize",
-            size: this.server.games[this.server.games.length - 1].size,
+            size: this.server.games[gameIndex].size,
         }));
     }
 }
