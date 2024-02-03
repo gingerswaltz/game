@@ -5,6 +5,9 @@ const http = require("http");
 const WebSocket = require("ws");
 const Player = require('./player');
 const game = require('./game')
+
+// todo: метод возвращающий игру по clientId
+
 // Класс сервера "крестики-нолики"
 class TicTacToeServer {
   // Конструктор класса TicTacToeServer
@@ -50,6 +53,17 @@ class TicTacToeServer {
     this.matchClients(player.clientId);
   }
 
+  
+  findGameIndexByClientId(clientId) {
+    // Ищем игру, в которой участвует игрок с указанным clientId
+    for (let i = 0; i < this.games.length; i++) {
+      const game = this.games[i];
+      if (game.currentPlayers.some(player => player.clientId === clientId)) {
+        return i; // Возвращаем индекс игры
+      }
+    }
+    return -1; // Если игра не найдена
+  }
 
 
   matchClients(clientId) {
@@ -58,19 +72,19 @@ class TicTacToeServer {
     if (this.clientIdsWaitingMatch.length < 2) {
       //console.log ("[SERVER]  Waiting match length: ", this.clientIdsWaitingMatch.length);
       //console.log("[SERVER] Choosing a host: ", this.clientConnections[clientId]);
-      
+
       // Если данный ИГРОК подключился к игре первее, он будет хостом. Ставим флаг хоста true
       this.clientConnections[clientId].isHost = true;
       // Отсылаем интерфейсу информацию о хосте
       this.clientConnections[clientId].sendHostMessage();
       // Создаем игру
       this.games.push(new game(0));
-      // Добавим игрока в список игроков в новой сессии
-      this.games[this.games.length-1].
-      currentPlayers.
-      push(this.clientConnections[clientId]);
+      // Добавим игрока в список игроков в новой игре
+      this.games[this.games.length - 1].
+        currentPlayers.
+        push(this.clientConnections[clientId]);
       // Назначим первому игроку номер игры
-      this.clientConnections[clientId].gameId = this.games[this.games.length-1].gameId;
+      this.clientConnections[clientId].gameId = this.games[this.games.length - 1].gameId;
       return;
     }
 
@@ -79,11 +93,11 @@ class TicTacToeServer {
     const secondClientId = this.clientIdsWaitingMatch.shift();
     // присваиваем номер игры
     this.clientConnections[secondClientId].gameId = this.clientConnections[firstClientId].gameId;
-    
+
     // Устанавливаем соответствие между первым и вторым клиентами
     this.opponents[firstClientId] = secondClientId;
     this.opponents[secondClientId] = firstClientId;
-    
+
     // Отправляем сообщение о присоединении первому и второму клиентам
     this.clientConnections[firstClientId].sendJoinMessage("X");
     this.clientConnections[secondClientId].sendJoinMessage("O");
@@ -95,13 +109,13 @@ class TicTacToeServer {
     const opponentClientId = this.opponents[clientId];
     const gameId = this.clientConnections[clientId].gameId;
 
-    if (this.games[gameId-1].checkWin(result.field)) {
+    if (this.games[gameId - 1].checkWin(result.field)) {
       [clientId, opponentClientId].forEach(cid => {
         this.clientConnections[cid].sendResultMessage(`${result.symbol} win`, result.field, result.size);
       });
     }
 
-    if (this.games[gameId-1].checkDraw(result.field)) {
+    if (this.games[gameId - 1].checkDraw(result.field)) {
       [clientId, opponentClientId].forEach(cid => {
         this.clientConnections[cid].sendResultMessage("Draw", result.field);
       });
@@ -110,6 +124,7 @@ class TicTacToeServer {
     [clientId, opponentClientId].forEach(cid => {
       this.clientConnections[cid].sendUpdateMessage(result.symbol === "X" ? "O" : "X", result.field);
     });
+
   }
 
   closeClient(player) {
@@ -125,14 +140,26 @@ class TicTacToeServer {
     delete this.clientConnections[player.clientId];
   }
 
+  handleReadyMessage(clientId, category) {
+    const opponentClientId = this.opponents[clientId];
 
-  //   handleMessage(message) {
-  //     const result = JSON.parse(message);
+    // Отправляем сообщение оппоненту
+    if (opponentClientId && this.clientConnections[opponentClientId]) {
+      this.clientConnections[opponentClientId].sendHostReadyMessage(category);
+    }
 
-  //     if (result.method === "resize") {
-  //         this.game.renewSize(result.size);
-  //     }
-  // }
+  }
+  
+  handleResizeMessage(clientId) {
+    const opponentClientId = this.opponents[clientId];
+
+    // Отправляем сообщение оппоненту
+    if (opponentClientId && this.clientConnections[opponentClientId]) {
+      this.clientConnections[opponentClientId].sendResizeMessage();
+    }
+
+  }
+
 
 }
 

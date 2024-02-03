@@ -1,5 +1,5 @@
 const WebSocket = require("ws");
-
+// todo: везде где индекс game - 1 нужно заменить на метод с сервера который даст нужную по айдишнику игру 
 // Класс игрока
 class Player {
     static clientIdCounter = 0;
@@ -22,7 +22,11 @@ class Player {
             this.server.moveHandler(result, this.clientId);
         }
         if (result.method === "resize") {
-            this.server.games[this.server.games.length-1].renewSize(result.size)
+            this.server.games[this.server.games.length - 1].renewSize(result.size);
+            this.server.handleResizeMessage(this.clientId, result.size);
+        }
+        if (result.method === "hostReady") {
+            this.server.handleReadyMessage(this.clientId, result.category);
         }
 
     }
@@ -36,7 +40,7 @@ class Player {
             method: "join",
             symbol: symbol,
             turn: "X",
-            size: this.server.games[this.server.games.length-1].size,
+            size: this.server.games[this.server.games.length - 1].size,
         }));
         this.isWaitingMatch = false;
     }
@@ -74,7 +78,20 @@ class Player {
                 method: "isHost",
             }));
         }
+    }
 
+    sendHostReadyMessage(category) {
+        this.connection.send(JSON.stringify({
+            method: "hostReady",
+            selectedCategory: category,
+        }));
+    }
+
+    sendResizeMessage(){
+        this.connection.send(JSON.stringify({
+            method: "resize",
+            size: this.server.games[this.server.games.length - 1].size,
+        }));
     }
 }
 

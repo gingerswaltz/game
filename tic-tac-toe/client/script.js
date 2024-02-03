@@ -19,16 +19,39 @@ const tictacImg = {
 }; // категории картинок и их соответствие
 let selectedCategory; // выбранная категория картинок
 let isHostReady = false;
+let isHost = false;
 
 // событие переключения с картинок на сток
 changeImageBtn.addEventListener('click', function () {
+  handleDropDownChange();
+});
+
+
+function handleDropDownChange() {
+  const imageDropdown = document.getElementById('imageDropdown');
+  selectedCategory = imageDropdown.value.toLowerCase();
   handleImageChange();
+}
+
+
+document.getElementById('readyButton').addEventListener('click', function () {
+  selectedCategory = isCustom === false ? 'stock' : selectedCategory;
+  //console.log("sending to server: ", size);
+  ws.send(JSON.stringify({
+    "method": "resize",
+    "size": size,
+  }));
+  // Отправка сообщения о готовности серверу
+  ws.send(JSON.stringify({
+    "method": "hostReady",
+    "category": selectedCategory
+  }));
+  isHostReady = true;
+  updateMessage();
 });
 
 // переключатель картинка/стоковые tic-tac
 function handleImageChange() {
-  const imageDropdown = document.getElementById('imageDropdown');
-  selectedCategory = imageDropdown.value.toLowerCase();
   //console.log(selectedCategory);
   if (selectedCategory != "stock")
     isCustom = true;
@@ -41,12 +64,20 @@ function handleImageChange() {
 // Функция для обновления изображений с использованием значений из объекта
 function updateBackgroundImages() {
   cellElements.forEach((cell, index) => {
-    const backgroundImage = `url('${tictacImg[selectedCategory][index % 2]}')`;
-    //console.log("Selected image: ", backgroundImage);
+    const xIndex = 0;  // Индекс для X-img
+    const oIndex = 1;  // Индекс для img-O
+
+    // Выбираем изображение в зависимости от символа в поле (X или O)
+    const backgroundImage = field[index] === "X"
+      ? `url('${tictacImg[selectedCategory][xIndex]}')`
+      : `url('${tictacImg[selectedCategory][oIndex]}')`;
+
+    // Применяем выбранное изображение к фону ячейки
     cell.style.setProperty('--bg-img-before', backgroundImage);
     cell.style.setProperty('--bg-img-after', backgroundImage);
   });
 }
+
 // генерация полей
 function generateField() {
   field = Array(size * size).fill(""); // Пересоздаем поле при изменении размера
@@ -77,10 +108,8 @@ document.getElementById('size5Button').addEventListener('click', function () {
 
 // генерация игрового поля
 function generateBoard(size) {
-
   const board = document.querySelector(".board");
   board.innerHTML = ""; // Очищаем существующее поле
-
   let columns;
   switch (size) {
     case 3:
@@ -96,11 +125,8 @@ function generateBoard(size) {
       columns = 3;
       break;
   }
-
-
   // Создаем сетку с заданным количеством колонок
   board.style.gridTemplateColumns = `repeat(${columns}, 20vmin)`;
-
   for (let i = 0; i < size * size; i++) {
     const cell = document.createElement("div");
     cell.classList.add("cell");
@@ -111,18 +137,13 @@ function generateBoard(size) {
 // обновление размера поля
 function changeBoardSize(newSize) {
   size = newSize;
-
-  ws.send(JSON.stringify({
-    "method": "resize",
-    "size": size,
-  }));
   generateField();
 }
 
 
 ws.onmessage = message => {
   const response = JSON.parse(message.data);
-  //console.log("From server: ", response);
+  //.log("From server: ", response);
 
   // Обработка входа игрока
   if (response.method === "join") {
@@ -164,12 +185,23 @@ ws.onmessage = message => {
   if (response.method === "isHost") {
     buttonContainer.style.display = 'block';
     buttonImg.style.display = 'block';
+    isHost = true;
+  }
+
+  if (response.method === "hostReady") {
+    isHostReady = true;
+    selectedCategory = response.selectedCategory;
+    handleImageChange();
+    updateMessage();
+  }
+
+  if (response.method === "resize") {
+    changeBoardSize(response.size);
   }
 };
 
 // обработка нажатия на клетку
 function makeMove(index) {
-
   if (!isGameActive || field[index] !== "") {
     return;
   }
@@ -209,17 +241,32 @@ function updateBoard() {
 }
 
 
+
 // функция обновления состояния игры
 function updateMessage() {
-  if (symbol === turn) {
-    messageElement.textContent = "move";
-    buttonContainer.style.display = 'none';
-    buttonImg.style.display = 'none';
-
+  //console.log(isHostReady);
+  if (isHostReady) {
+    if (symbol === turn) {
+      messageElement.textContent = "move";
+      buttonContainer.style.display = 'none';
+      buttonImg.style.display = 'none';
+    } else {
+      messageElement.textContent = `waiting ${turn}...`;
+      buttonContainer.style.display = 'none';
+      buttonImg.style.display = 'none';
+    }
   } else {
-    messageElement.textContent = `waiting ${turn}...`;
-    buttonContainer.style.display = 'none';
-    buttonImg.style.display = 'none';
+    messageElement.textContent = "Wait for setup"; // Новое сообщение для ожидания готовности хоста
+    buttonContainer.style.display = isHost === true ? 'block' : 'none';
+    buttonImg.style.display = isHost === true ? 'block' : 'none';
+    cellElements.forEach((cell, index) => cell.removeEventListener('click', () => {
+      makeMove(index);
+    }));
+    // Устанавливаем pointer-events: none для каждой ячейки
+    cellElements.forEach((cell) => {
+      cell.style.pointerEvents = 'none';
+    });
   }
 }
+
 
