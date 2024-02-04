@@ -83,14 +83,14 @@ function generateField() {
   field = Array(size * size).fill(""); // Пересоздаем поле при изменении размера
   generateBoard(size);
   updateBoard();
-  cellElements = document.querySelectorAll('.cell');
+  // cellElements = document.querySelectorAll('.cell');
 
-  cellElements.forEach((cell, index) => cell.removeEventListener('click', (event) => {
-    makeMove(index);
-  }));
-  cellElements.forEach((cell, index) => cell.addEventListener('click', (event) => {
-    makeMove(index);
-  }));
+  // cellElements.forEach((cell, index) => cell.removeEventListener('click', (event) => {
+  //   makeMove(index);
+  // }));
+  // cellElements.forEach((cell, index) => cell.addEventListener('click', (event) => {
+  //   makeMove(index);
+  // }));
 }
 
 
@@ -173,18 +173,21 @@ ws.onmessage = message => {
     setTimeout(() => {
       messageElement.textContent = response.message;
     }, 100);
+    removeCellEvent();
   }
 
   // Выведем сообщение о выходе оппонента
   if (response.method === "left") {
     isGameActive = false;
-    messageElement.textContent = response.message;
+    messageElement.textContent = response.message+"; Refresh page to start new game";
+    removeCellEvent();
   }
 
   // Хосту отрисуем кнопки изменения визуала игры
   if (response.method === "isHost") {
     buttonContainer.style.display = 'block';
     buttonImg.style.display = 'block';
+    
     isHost = true;
   }
 
@@ -246,27 +249,49 @@ function updateBoard() {
 function updateMessage() {
   //console.log(isHostReady);
   if (isHostReady) {
+    addCellEvent();
     if (symbol === turn) {
       messageElement.textContent = "move";
-      buttonContainer.style.display = 'none';
-      buttonImg.style.display = 'none';
+      handleDisplayBlock();
     } else {
       messageElement.textContent = `waiting ${turn}...`;
-      buttonContainer.style.display = 'none';
-      buttonImg.style.display = 'none';
+      handleDisplayBlock();
     }
   } else {
-    messageElement.textContent = "Wait for setup"; // Новое сообщение для ожидания готовности хоста
+    messageElement.textContent = "Wait for setup, turn on sound"; // Новое сообщение для ожидания готовности хоста
     buttonContainer.style.display = isHost === true ? 'block' : 'none';
     buttonImg.style.display = isHost === true ? 'block' : 'none';
-    cellElements.forEach((cell, index) => cell.removeEventListener('click', () => {
-      makeMove(index);
-    }));
-    // Устанавливаем pointer-events: none для каждой ячейки
-    cellElements.forEach((cell) => {
-      cell.style.pointerEvents = 'none';
-    });
+    const readyButton = document.getElementById('readyButton');
+    readyButton.disabled = false;
+    buttonContainer.style.opacity = 1;
+    buttonImg.style.opacity = 1;
+    removeCellEvent();
   }
+};
+
+
+function handleDisplayBlock() {
+  buttonContainer.style.display = 'none';
+  buttonImg.style.display = 'none';
 }
 
+function removeCellEvent() {
+  // Устанавливаем pointer-events: none для каждой ячейки
+  cellElements.forEach((cell) => {
+    cell.style.pointerEvents = 'none';
+  });
+  cellElements.forEach((cell, index) => cell.removeEventListener('click', () => {
+    makeMove(index);
+  }));
+}
 
+function addCellEvent(){
+  cellElements = document.querySelectorAll('.cell');
+
+  cellElements.forEach((cell, index) => cell.removeEventListener('click', (event) => {
+    makeMove(index);
+  }));
+  cellElements.forEach((cell, index) => cell.addEventListener('click', (event) => {
+    makeMove(index);
+  }));
+}
